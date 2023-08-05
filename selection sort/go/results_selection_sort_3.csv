@@ -1,5 +1,5 @@
-Tamaño de la lista,Tiempo de ejecución (segundos)
-100,0.000000
+Size,Time
+100,0.000001
 1000,0.000501
 2000,0.002036
 3000,0.004500
