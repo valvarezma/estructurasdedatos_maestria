@@ -61,8 +61,9 @@ int main() {
 
     cout << "Resultados almacenados en el vector 'results':" << endl;
     for (const auto& result : results) {
-        cout << result.first << " - " << result.second << endl;
+        cout << result.first << " - " << result.second << endl;        
     }
+    export_to_csv_cpp(results);
 
 
     return 0;
