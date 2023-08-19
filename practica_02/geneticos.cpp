@@ -30,10 +30,8 @@ struct Individual {
 double calcFitness(const Individual& ind) {
     double distance = 0;
     for (int i = 0; i < numCities - 1; ++i) {
-        // Sumar la distancia entre ciudades adyacentes en el orden dado
         distance += distanceMatrix[ind.order[i]][ind.order[i+1]];
     }
-    // Agregar la distancia de regreso a la ciudad inicial
     distance += distanceMatrix[ind.order[numCities - 1]][ind.order[0]];
     return 1.0 / distance; // Mayor fitness para distancias menores
 }
@@ -82,16 +80,15 @@ vector<int> crossover(const vector<int>& parentA, const vector<int>& parentB) {
     return child;
 }
 
-// Función para aplicar una mutación a un individuo
-void mutate(Individual& ind) {
+// Función para aplicar una mutación a un orden de ciudades
+void mutate(vector<int>& order) {
     for (int i = 0; i < numCities; ++i) {
         if (static_cast<double>(rand()) / RAND_MAX < mutationRate) { // Probabilidad de mutación
             int indexA = rand() % numCities;
             int indexB = (indexA + 1) % numCities;
-            swap(ind.order[indexA], ind.order[indexB]); // Intercambiar dos ciudades en el orden
+            swap(order[indexA], order[indexB]); // Intercambiar dos ciudades en el orden
         }
     }
-    ind.fitness = calcFitness(ind); // Recalcular el valor de aptitud después de la mutación
 }
 
 int main() {
@@ -104,7 +101,6 @@ int main() {
     for (int gen = 0; gen < generations; ++gen) {
         vector<Individual> newPopulation;
 
-        // Elitismo: Mantener el mejor individuo sin cambios en cada generación
         double bestFitness = population[0].fitness;
         int bestIndex = 0;
 
