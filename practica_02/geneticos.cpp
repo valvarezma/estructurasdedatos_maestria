@@ -10,9 +10,9 @@
 using namespace std;
 using namespace std::chrono;
 
-const int numCities = 15; 
-const int populationSize = 50;
-const int generations = 1000;
+const int numCities = 100; 
+const int populationSize = 400;
+const int generations = 3000;
 const double mutationRate = 0.2;
 
 // Matriz de distancias entre ciudades
@@ -117,17 +117,9 @@ const double mutationRate = 0.2;
 //Best order: 12 11 4 6 13 2 8 3 14 7 1 5 10 9 0 
 //Best distance: 580
 //Time elapsed: 103 milliseconds
-
+vector<vector<int>> distanceMatrix;
 // Generar una matriz de distancias aleatorias
-for (int i = 0; i < numCities; ++i) {
-    for (int j = 0; j < numCities; ++j) {
-        if (i == j) {
-            distanceMatrix[i][j] = 0; // La distancia de una ciudad a sí misma es 0
-        } else {
-            distanceMatrix[i][j] = generateRandomDistance();
-        }
-    }
-}
+
 struct Individual {
     vector<int> order; // Orden de visita de las ciudades
     double fitness;    // Valor de aptitud
@@ -198,9 +190,25 @@ void mutate(vector<int>& order) {
         }
     }
 }
+// Función para generar una distancia aleatoria entre ciudades
+int generateRandomDistance() {
+    return rand() % 100 + 1; // Genera un número aleatorio entre 1 y 100
+}
 
 int main() {
     srand(time(nullptr)); // Inicializar la semilla para números aleatorios
+    vector<vector<int>> distanceMatrix_a(numCities, vector<int>(numCities, 0));
+
+    for (int i = 0; i < numCities; ++i) {
+        for (int j = 0; j < numCities; ++j) {
+            if (i == j) {
+                distanceMatrix_a[i][j] = 0; // La distancia de una ciudad a sí misma es 0
+            } else {
+                distanceMatrix_a[i][j] = generateRandomDistance();
+            }
+        }
+    }
+    distanceMatrix = distanceMatrix_a;
      auto start = high_resolution_clock::now();
     // Crear una población inicial de individuos aleatorios
     vector<Individual> population = createInitialPopulation();
