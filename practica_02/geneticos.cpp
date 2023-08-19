@@ -10,7 +10,7 @@
 using namespace std;
 using namespace std::chrono;
 
-const int numCities = 10; 
+const int numCities = 15; 
 const int populationSize = 50;
 const int generations = 1000;
 const double mutationRate = 0.2;
@@ -79,6 +79,55 @@ const double mutationRate = 0.2;
 //Best distance: 354
 //Time elapsed: 88 milliseconds
 // Estructura para representar un individuo
+/*vector<vector<int>> distanceMatrix = {
+{0, 80, 40, 120, 147, 200, 40, 25, 20, 35, 50, 30},
+{80, 0, 100, 140, 90, 50, 30, 45, 80, 60, 40, 60},
+{40, 100, 0, 133, 135, 65, 80, 60, 45, 35, 20, 50},
+{120, 140, 133, 0, 58, 50, 40, 34, 20, 70, 60, 70},
+{147, 90, 135, 58, 0, 40, 30, 50, 65, 55, 50, 30},
+{200, 50, 65, 50, 40, 0, 74, 80, 60, 40, 30, 30},
+{40, 30, 80, 40, 30, 74, 0, 55, 25, 30, 20, 40},
+{25, 45, 60, 34, 50, 80, 55, 0, 50, 70, 60, 55},
+{20, 80, 45, 20, 65, 60, 25, 50, 0, 60, 40, 77},
+{35, 60, 35, 70, 55, 40, 30, 70, 60, 0, 30, 45},
+{50, 40, 20, 60, 50, 30, 20, 60, 40, 30, 0, 50},
+{30, 60, 50, 70, 30, 30, 40, 55, 77, 45, 50, 0}
+};*/
+//Best order: 1 6 9 10 2 8 3 5 4 11 0 7 
+//Best distance: 395
+//Time elapsed: 85 milliseconds
+
+/*vector<vector<int>> distanceMatrix = {
+{0, 80, 40, 120, 147, 200, 40, 25, 20, 35, 50, 30, 40, 35, 80},
+{80, 0, 100, 140, 90, 50, 30, 45, 80, 60, 40, 60, 70, 100, 99},
+{40, 100, 0, 133, 135, 65, 80, 60, 45, 35, 20, 50, 100, 40, 100},
+{120, 140, 133, 0, 58, 50, 40, 34, 20, 70, 60, 70, 60, 35, 50},
+{147, 90, 135, 58, 0, 40, 30, 50, 65, 55, 50, 30, 80, 70, 90},
+{200, 50, 65, 50, 40, 0, 74, 80, 60, 40, 30, 30, 60, 50, 80},
+{40, 30, 80, 40, 30, 74, 0, 55, 25, 30, 20, 40, 90, 40, 70},
+{25, 45, 60, 34, 50, 80, 55, 0, 50, 70, 60, 55, 75, 35, 45},
+{20, 80, 45, 20, 65, 60, 25, 50, 0, 60, 40, 77, 80, 60, 80},
+{35, 60, 35, 70, 55, 40, 30, 70, 60, 0, 30, 45, 60, 50, 90},
+{50, 40, 20, 60, 50, 30, 20, 60, 40, 30, 0, 50, 44, 45, 60},
+{30, 60, 50, 70, 30, 30, 40, 55, 77, 45, 50, 0, 50, 60, 100},
+{40, 70, 100, 60, 80, 60, 90, 75, 80, 60, 44, 50, 0, 80, 90},
+{35, 100, 40, 35, 70, 50, 40, 35, 60, 50, 45, 60, 80, 0, 65},
+{80, 99, 100, 50, 90, 80, 70, 45, 80, 90, 60, 100, 90, 65, 0}
+};*/
+//Best order: 12 11 4 6 13 2 8 3 14 7 1 5 10 9 0 
+//Best distance: 580
+//Time elapsed: 103 milliseconds
+
+// Generar una matriz de distancias aleatorias
+for (int i = 0; i < numCities; ++i) {
+    for (int j = 0; j < numCities; ++j) {
+        if (i == j) {
+            distanceMatrix[i][j] = 0; // La distancia de una ciudad a sí misma es 0
+        } else {
+            distanceMatrix[i][j] = generateRandomDistance();
+        }
+    }
+}
 struct Individual {
     vector<int> order; // Orden de visita de las ciudades
     double fitness;    // Valor de aptitud
