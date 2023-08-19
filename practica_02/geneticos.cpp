@@ -3,23 +3,81 @@
 #include <algorithm>
 #include <ctime>
 #include <cstdlib>
+#include <chrono> // Librería para medir el tiempo
+
+
 
 using namespace std;
+using namespace std::chrono;
 
-const int numCities = 5;
+const int numCities = 10; 
 const int populationSize = 50;
 const int generations = 1000;
 const double mutationRate = 0.2;
 
 // Matriz de distancias entre ciudades
-vector<vector<int>> distanceMatrix = {
+/*vector<vector<int>> distanceMatrix = {
     {0, 113, 56, 167, 147},
     {113, 0, 137, 142, 98},
     {56, 137, 0, 133, 135},
     {167, 142, 133, 0, 58},
     {147, 98, 135, 58, 0}
-};
+};*/
+//Best order: 3 2 0 1 4 
+//Best distance: 458
+//Time elapsed: 56 milliseconds
+/*vector<vector<int>> distanceMatrix = {
+{0, 120, 50, 167, 147, 200},
+{120, 0, 200, 142, 98, 45},
+{50, 200, 0, 133, 135, 65},
+{167, 142, 133, 0, 58, 50},
+{147, 98, 135, 58, 0, 40},
+{200, 45, 65, 50, 40, 0}
+};*/
+//Best order: 2 0 1 4 3 5 
+//Best distance: 441
+//Time elapsed: 63 milliseconds
+/*vector<vector<int>> distanceMatrix = {
+{0, 150, 50, 165, 147, 200, 40},
+{150, 0, 200, 140, 90, 50, 30},
+{50, 200, 0, 133, 135, 65, 80},
+{165, 140, 133, 0, 58, 50, 40},
+{147, 90, 135, 58, 0, 40, 30},
+{200, 50, 65, 50, 40, 0, 74},
+{40, 30, 80, 40, 30, 74, 0},
+};*/
+//Best order: 1 4 3 5 2 0 6 
+//Best distance: 383
+//Time elapsed: 64 milliseconds
 
+/*vector<vector<int>> distanceMatrix = {
+{0, 80, 40, 120, 140, 100, 40, 25},
+{80, 0, 100, 140, 90, 50, 30, 45},
+{40, 100, 0, 133, 135, 65, 80, 60},
+{120, 140, 133, 0, 58, 50, 40, 34},
+{140, 90, 135, 58, 0, 40, 30, 50},
+{100, 50, 65, 50, 40, 0, 74, 80},
+{40, 30, 80, 40, 30, 74, 0, 55},
+{25, 45, 60, 34, 50, 80, 55, 0}
+};*/
+//Best order: 0 2 5 1 6 4 3 7 
+//Best distance: 332
+//Time elapsed: 79 milliseconds
+/*vector<vector<int>> distanceMatrix = {
+{0, 50, 100, 150, 140, 110, 40, 25, 20, 35},
+{50, 0, 70, 140, 90, 50, 30, 45, 80, 60},
+{100, 70, 0, 133, 135, 65, 80, 60, 45, 35},
+{150, 140, 133, 0, 58, 50, 40, 34, 20, 70},
+{140, 90, 135, 58, 0, 40, 30, 50, 65, 55},
+{110, 50, 65, 50, 40, 0, 74, 80, 60, 40},
+{40, 30, 80, 40, 30, 74, 0, 55, 25, 30},
+{25, 45, 60, 34, 50,80, 55, 0, 50, 70},
+{20, 80, 45, 20, 65, 60, 25, 50, 0, 100},
+{35, 60, 35, 70, 55, 40, 30, 70, 100, 0}
+};*/
+//Best order: 0 8 3 7 1 6 4 5 2 9 
+//Best distance: 354
+//Time elapsed: 88 milliseconds
 // Estructura para representar un individuo
 struct Individual {
     vector<int> order; // Orden de visita de las ciudades
@@ -53,6 +111,7 @@ vector<Individual> createInitialPopulation() {
 }
 
 // Función para realizar el cruce entre dos padres y generar un hijo
+
 vector<int> crossover(const vector<int>& parentA, const vector<int>& parentB) {
     int startPos = rand() % numCities;
     int endPos = rand() % numCities;
@@ -93,7 +152,7 @@ void mutate(vector<int>& order) {
 
 int main() {
     srand(time(nullptr)); // Inicializar la semilla para números aleatorios
-
+     auto start = high_resolution_clock::now();
     // Crear una población inicial de individuos aleatorios
     vector<Individual> population = createInitialPopulation();
 
@@ -157,8 +216,12 @@ int main() {
         cout << bestOrder[i] << " ";
     }
     cout << endl;
+    auto end = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(end - start);
 
     cout << "Best distance: " << bestDistance << endl;
+    cout << "Time elapsed: " << duration.count() << " milliseconds" << endl;
+    cout << "-----------------------" << endl;
 
     return 0;
 }
