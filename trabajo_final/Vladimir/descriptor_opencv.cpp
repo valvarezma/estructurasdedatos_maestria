@@ -9,7 +9,7 @@ int main(){
 Mat src, descriptors,dest;
 vector<KeyPoint> keypoints;
 
-src = imread("D:\\ImagesForTest\\leaf.jpg");
+src = imread("D:\\Prueba.jpg");
 
 
 cvtColor(src, src, CV_BGR2GRAY);
