@@ -12,25 +12,25 @@ struct ImageDataPoint {
     std::string label;
 };
 
-// Función para calcular la distancia euclidiana entre dos descriptores SIFT
+// FunciÃ³n para calcular la distancia euclidiana entre dos descriptores SIFT
 double calculateDistance(const cv::Mat& descriptor1, const cv::Mat& descriptor2) {
     try {
-        // Verifica si las matrices tienen el mismo tamaño antes de llamar a cv::norm
+        // Verifica si las matrices tienen el mismo tamaÃ±o antes de llamar a cv::norm
         if (descriptor1.size() != descriptor2.size()) {
-            // Maneja el error o lanza una excepción según tus necesidades
-            throw std::runtime_error("Las matrices no tienen el mismo tamaño");
+            // Maneja el error o lanza una excepciÃ³n segÃºn tus necesidades
+            throw std::runtime_error("Las matrices no tienen el mismo tamaÃ±o");
         }
         return cv::norm(descriptor1, descriptor2, cv::NORM_L2);
     }
     catch (cv::Exception& e) {
-        // Maneja la excepción de OpenCV aquí
-        std::cerr << "Excepción de OpenCV: " << e.what() << std::endl;
-        // Puedes tomar medidas adecuadas, como devolver un valor predeterminado o lanzar una excepción personalizada si es necesario.
-        throw; // Propaga la excepción nuevamente si es necesario.
+        // Maneja la excepciÃ³n de OpenCV aquÃ­
+        std::cerr << "ExcepciÃ³n de OpenCV: " << e.what() << std::endl;
+        // Puedes tomar medidas adecuadas, como devolver un valor predeterminado o lanzar una excepciÃ³n personalizada si es necesario.
+        throw; // Propaga la excepciÃ³n nuevamente si es necesario.
     }
 }
 
-// Función para obtener la etiqueta de una imagen desde un archivo XML
+// FunciÃ³n para obtener la etiqueta de una imagen desde un archivo XML
 std::string getLabelFromXML(const std::string& xmlPath) {
     tinyxml2::XMLDocument doc;
     if (doc.LoadFile(xmlPath.c_str()) != tinyxml2::XML_SUCCESS) {
@@ -81,7 +81,7 @@ void showImage(const std::string& imagePath) {
     cv::waitKey(0);
 }
 
-// Función para generar descriptores SIFT de una imagen
+// FunciÃ³n para generar descriptores SIFT de una imagen
 cv::Mat generateSIFTDescriptor(const std::string& imagePath) {
     cv::Mat image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
     if (image.empty()) {
@@ -90,14 +90,14 @@ cv::Mat generateSIFTDescriptor(const std::string& imagePath) {
     }
 
     cv::Ptr<cv::SIFT> sift = cv::SIFT::create();
-    std::vector<cv::KeyPoint> keypoints; // Lista vacía de keypoints
+    std::vector<cv::KeyPoint> keypoints; // Lista vacÃ­a de keypoints
     cv::Mat descriptor;
 
-    // Asegurarse de que el descriptor tenga un tamaño fijo
-    cv::Size fixedSize(128, 1); // Tamaño fijo para los descriptores SIFT
+    // Asegurarse de que el descriptor tenga un tamaÃ±o fijo
+    cv::Size fixedSize(128, 1); // TamaÃ±o fijo para los descriptores SIFT
     sift->compute(image, keypoints, descriptor);
 
-    // Redimensionar el descriptor al tamaño fijo si es necesario
+    // Redimensionar el descriptor al tamaÃ±o fijo si es necesario
     if (descriptor.size() != fixedSize) {
         cv::resize(descriptor, descriptor, fixedSize);
     }
@@ -105,7 +105,7 @@ cv::Mat generateSIFTDescriptor(const std::string& imagePath) {
     return descriptor;
 }
 
-// Función para generar descriptores Canny de una imagen
+// FunciÃ³n para generar descriptores Canny de una imagen
 cv::Mat generateCannyDescriptor(const std::string& imagePath) {
     cv::Mat image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
     if (image.empty()) {
@@ -114,10 +114,10 @@ cv::Mat generateCannyDescriptor(const std::string& imagePath) {
     }
 
     cv::Mat edges;
-    cv::Canny(image, edges, 100, 200); // Ajusta los umbrales según sea necesario
+    cv::Canny(image, edges, 100, 200); // Ajusta los umbrales segÃºn sea necesario
 
-    // Asegurarse de que el descriptor tenga un tamaño fijo
-    cv::Size fixedSize(128, 1); // Tamaño fijo para los descriptores Canny (ajusta según sea necesario)
+    // Asegurarse de que el descriptor tenga un tamaÃ±o fijo
+    cv::Size fixedSize(128, 1); // TamaÃ±o fijo para los descriptores Canny (ajusta segÃºn sea necesario)
     cv::resize(edges, edges, fixedSize);
 
     return edges;
@@ -146,7 +146,7 @@ std::vector<ImageDataPoint> generateTrainingData(const std::string& folderPath, 
     return trainingData;
 }
 
-// Función para clasificar una imagen usando el algoritmo k-NN
+// FunciÃ³n para clasificar una imagen usando el algoritmo k-NN
 std::string kNNClassify(const std::vector<ImageDataPoint>& dataset, const cv::Mat& inputDescriptor, int k) {
     // Calcular distancias entre el descriptor de entrada y los descriptores en el conjunto de datos
     std::vector<std::pair<double, std::string>> distances; // distancia, etiqueta
@@ -157,20 +157,20 @@ std::string kNNClassify(const std::vector<ImageDataPoint>& dataset, const cv::Ma
             distances.push_back(std::make_pair(distance, dataPoint.label));
         }
         catch (std::exception& e) {
-            std::cerr << "Excepción no controlada: " << e.what() << std::endl;
+            std::cerr << "ExcepciÃ³n no controlada: " << e.what() << std::endl;
         }
     }
 
     // Ordenar las distancias de menor a mayor
     std::sort(distances.begin(), distances.end());
 
-    // Contar las etiquetas de los k vecinos más cercanos
+    // Contar las etiquetas de los k vecinos mÃ¡s cercanos
     std::map<std::string, int> labelCount;
     for (int i = 0; i < k && i < distances.size(); ++i) {
         labelCount[distances[i].second]++;
     }
 
-    // Encontrar la etiqueta más común entre los k vecinos
+    // Encontrar la etiqueta mÃ¡s comÃºn entre los k vecinos
     int maxCount = 0;
     std::string bestLabel = "unknown";
     for (const auto& pair : labelCount) {
@@ -188,8 +188,8 @@ int main() {
     // Ruta de la carpeta de entrenamiento
     std::string trainingFolderPath = "road_signs";
 
-    // Número total de imágenes de entrenamiento
-    int numTrainingImages = 100;
+    // NÃºmero total de imÃ¡genes de entrenamiento
+    int numTrainingImages = 500;
 
     // Generar los datos de entrenamiento
     std::vector<ImageDataPoint> trainingData = generateTrainingData(trainingFolderPath, numTrainingImages);
