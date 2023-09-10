@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source.cpp">
+    <ClCompile Include="OpenCV.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="tinyxml2.cpp">
