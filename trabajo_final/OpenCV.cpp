@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <opencv2/opencv.hpp>
+#include <random>
 #include "tinyxml2.h"
 #include <omp.h> // Para paralelización
 
@@ -99,6 +100,89 @@ cv::Mat generateSIFTDescriptor(const cv::Mat& image, int desiredDimension) {
     return descriptor; // Devolver el descriptor SIFT con la dimensión deseada
 }
 
+//***********************************************************
+
+//***********************************************************
+
+// Función para generar descriptores ORB de una imagen con dimensiones consistentes
+cv::Mat generateORBDescriptor(const cv::Mat& image, int desiredDimension) {
+    // Verificar si se cargó la imagen correctamente
+    if (image.empty()) {
+        std::cerr << "Error: La imagen está vacía." << std::endl;
+        return cv::Mat(); // Devolver una matriz vacía en caso de error
+    }
+
+    // Inicializar el detector ORB
+    cv::Ptr<cv::ORB> orb = cv::ORB::create();
+
+    // Detectar y calcular descriptores ORB
+    std::vector<cv::KeyPoint> keypoints;
+    cv::Mat descriptor;
+    orb->detectAndCompute(image, cv::noArray(), keypoints, descriptor);
+
+    // Ajustar la dimensión del descriptor a la deseada
+    if (descriptor.rows != desiredDimension) {
+        if (descriptor.rows < desiredDimension) {
+            // Rellenar el descriptor si es más pequeño que la dimensión deseada
+            cv::Mat paddedDescriptor(desiredDimension, descriptor.cols, descriptor.type(), cv::Scalar(0));
+            descriptor.copyTo(paddedDescriptor(cv::Rect(0, 0, descriptor.cols, descriptor.rows)));
+            descriptor = paddedDescriptor;
+        }
+        else {
+            // Truncar el descriptor si es más grande que la dimensión deseada
+            descriptor = descriptor.rowRange(0, desiredDimension);
+        }
+    }
+
+    return descriptor; // Devolver el descriptor ORB con la dimensión deseada
+}
+
+
+//************************************************************
+
+cv::Mat generateCannyDescriptor(const cv::Mat& image, int desiredDimension) {
+    // Verificar si se cargó la imagen correctamente
+    if (image.empty()) {
+        std::cerr << "Error: La imagen está vacía." << std::endl;
+        return cv::Mat(); // Devolver una matriz vacía en caso de error
+    }
+
+    // Obtener el gradiente de la imagen
+    cv::Mat gradient;
+    cv::GaussianBlur(image, image, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
+    cv::Sobel(image, gradient, -1, 1, 0, 3, 1, 0);
+
+    // Aplicar la operación de Canny
+    cv::Mat edges;
+    cv::Canny(gradient, edges, 100, 200, 3);
+
+    // Ajustar la dimensión del descriptor a la deseada
+    if (edges.rows != desiredDimension) {
+        if (edges.rows < desiredDimension) {
+            // Rellenar el descriptor si es más pequeño que la dimensión deseada
+            cv::Mat paddedDescriptor(desiredDimension, edges.cols, edges.type(), cv::Scalar(0));
+            edges.copyTo(paddedDescriptor(cv::Rect(0, 0, edges.cols, edges.rows)));
+            edges = paddedDescriptor;
+        }
+        else {
+            // Truncar el descriptor si es más grande que la dimensión deseada
+            edges = edges.rowRange(0, desiredDimension);
+        }
+    }
+
+    cv::Size desiredSize(1, desiredDimension); // Tamaño deseado para los descriptores Canny
+    cv::resize(edges, edges, desiredSize);
+
+    // Transformar la imagen binaria en un vector
+    cv::Mat descriptorVector = edges.reshape(1, edges.total());
+
+
+
+    return descriptorVector; // Devolver el descriptor Canny con la dimensión deseada
+}
+
+//************************************************************
+
 // Función para generar datos de entrenamiento a partir de imágenes y archivos XML
 std::vector<ImageDataPoint> generateTrainingData(const std::string& folderPath, int numImages, int desiredDimension) {
     std::vector<ImageDataPoint> trainingData;
@@ -110,7 +194,7 @@ std::vector<ImageDataPoint> generateTrainingData(const std::string& folderPath, 
         std::string xmlPath = folderPath + "/annotations/road" + std::to_string(i) + ".xml";
 
         cv::Mat image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
-        cv::Mat descriptor = generateSIFTDescriptor(image, desiredDimension);
+        cv::Mat descriptor = generateORBDescriptor(image, desiredDimension);
 
         // Verificar si se generó el descriptor y la etiqueta no es "unknown"
         if (!descriptor.empty()) {
@@ -304,7 +388,20 @@ void testAndEvaluate(KDTreeNode* kdTreeRoot, const std::string& testFolderPath, 
     std::cout << "F1-Score: " << f1Score << std::endl;
 }
 
-int main() {
+
+int GenerarValorAleatorio(int inicio, int final) {
+    std::random_device rd;  // Generador de números aleatorios
+    std::mt19937 gen(rd()); // Semilla para el generador
+
+    // Distribución uniforme entre 'inicio' y 'final'
+    std::uniform_int_distribution<int> distribucion(inicio, final);
+
+    // Genera y devuelve un valor aleatorio dentro del rango
+    return distribucion(gen);
+}
+
+// Experimento considerando las imagenes de prueba como parte del entrenamiento
+void experimento_01() {
     std::cout << "Iniciando..." << std::endl;
 
     // Ruta de la carpeta de entrenamiento
@@ -324,47 +421,182 @@ int main() {
     KDTreeNode* kdTreeRoot = buildKDTree(trainingData, 0);
 
     // Ruta de la carpeta de imágenes de prueba
-    std::string testFolderPath = "test_images";
+    //std::string testFolderPath = "test_images";
 
     // Número total de imágenes de prueba
-    int numTestImages = 198;  // Cambia esto al número de imágenes de prueba que tengas
+    int numTestImages = 20;  // Cambia esto al número de imágenes de prueba que tengas
 
     // Evaluar el conjunto de imágenes de prueba
-    testAndEvaluate(kdTreeRoot, testFolderPath, numTestImages, desiredDimension);
+    //testAndEvaluate(kdTreeRoot, testFolderPath, numTestImages, desiredDimension);
 
     // Pedir al usuario que ingrese el nombre de la imagen a comparar
-    std::string inputImagePath;
-    std::cout << "Ingrese el nombre de la imagen a comparar (por ejemplo, '01.png'): ";
-    std::cin >> inputImagePath;
-    inputImagePath = "image/" + inputImagePath; // Concatenar el nombre de la imagen al final de la cadena
+    //std::string inputImagePath;
+    //std::cout << "Ingrese el nombre de la imagen a comparar (por ejemplo, '01.png'): ";
+    //std::cin >> inputImagePath;
+    //inputImagePath = "image/02.png"; //+ inputImagePath; // Concatenar el nombre de la imagen al final de la cadena
+
+    int aciertos = 0;
+    int desaciertos = 0;
+
+    for (int i = 0; i < numTestImages; ++i) {
+
+        int num_random = GenerarValorAleatorio(1, 700);
+
+        std::string imagePath = trainingFolderPath + "/images/road" + std::to_string(num_random) + ".png";
+        std::string xmlPath = trainingFolderPath + "/annotations/road" + std::to_string(num_random) + ".xml";
+
+        cv::Mat image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
+        cv::Mat descriptor = generateORBDescriptor(image, desiredDimension);
+
+        // Verificar si se generó el descriptor y la etiqueta no es "unknown"
+        std::string label = getLabelFromXML(xmlPath);
+
+        if (image.empty()) {
+            std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
+            return; // Salir del programa si no se pudo cargar la imagen
+        }
+
+        // Generar el descriptor SIFT para la imagen de entrada con la dimensión deseada
+        cv::Mat inputDescriptor = generateORBDescriptor(image, desiredDimension);
+
+        if (inputDescriptor.empty()) {
+            std::cerr << "Error: No se pudo generar el descriptor para la imagen." << std::endl;
+            return; // Salir del programa si no se pudo generar el descriptor
+        }
+
+        // Clasificar la imagen de entrada
+        std::string predictedLabel = kdTreeClassify(kdTreeRoot, inputDescriptor);
+
+        if (label == predictedLabel) {
+            std::cout << "Predicción correcta: " << predictedLabel << std::endl;
+            aciertos += 1;
+        }
+        else {
+            std::cout << "Predicción incorrecta: Original: " << label << " Predicción: " << predictedLabel << std::endl;
+            desaciertos += 1;
+        }
+
+    }
+
+    std::cout << "Porcentaje de aciertos: " << (aciertos * 100) / numTestImages << " Porcentaje de desaciertos: " << (desaciertos * 100) / numTestImages << std::endl;
+
+    int Precision = aciertos / (aciertos + desaciertos);
+    int Recall = 1;
+
+    std::cout << "Indicador F1 Score: (2 * precisión)/(precisión + recall) = " << (2 * Precision * Recall) / (Precision + Recall) << " Indicador Acuracy = " << (aciertos + desaciertos) / numTestImages << std::endl;
 
     // Cargar la imagen de entrada
-    cv::Mat inputImage = cv::imread(inputImagePath, cv::IMREAD_GRAYSCALE);
-
-    if (inputImage.empty()) {
-        std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
-        return 1; // Salir del programa si no se pudo cargar la imagen
-    }
-
-    // Generar el descriptor SIFT para la imagen de entrada con la dimensión deseada
-    cv::Mat inputDescriptor = generateSIFTDescriptor(inputImage, desiredDimension);
-
-    if (inputDescriptor.empty()) {
-        std::cerr << "Error: No se pudo generar el descriptor para la imagen." << std::endl;
-        return 1; // Salir del programa si no se pudo generar el descriptor
-    }
-
-    // Clasificar la imagen de entrada
-    std::string predictedLabel = kdTreeClassify(kdTreeRoot, inputDescriptor);
-
-    std::cout << "La imagen pertenece a la etiqueta: " << predictedLabel << std::endl;
 
     // Mostrar la imagen en escala de grises
-    cv::imshow("Imagen en Escala de Grises", inputImage);
-    cv::waitKey(0); // Esperar hasta que se presione una tecla
+    //cv::imshow("Imagen en Escala de Grises", inputImage);
+    //cv::waitKey(0); // Esperar hasta que se presione una tecla
 
     // Liberar la memoria del árbol k-d
     delete kdTreeRoot;
+}
+
+// Experimento excluyendo las imagenes de prueba como parte del entrenamiento
+
+void experimento_02() {
+    std::cout << "Iniciando..." << std::endl;
+
+    // Ruta de la carpeta de entrenamiento
+    std::string trainingFolderPath = "road_signs";
+
+    // Número total de imágenes de entrenamiento
+    int numTrainingImages = 700;
+
+    // Dimensión deseada para los descriptores SIFT
+    int desiredDimension = 256; // Cambia esto a la dimensión deseada
+
+    // Generar los datos de entrenamiento con la dimensión deseada
+    std::vector<ImageDataPoint> trainingData = generateTrainingData(trainingFolderPath, numTrainingImages, desiredDimension);
+    std::cout << "Cantidad en trainingData: " << trainingData.size() << std::endl;
+
+    // Construir el árbol k-d a partir de los datos de entrenamiento
+    KDTreeNode* kdTreeRoot = buildKDTree(trainingData, 0);
+
+    // Ruta de la carpeta de imágenes de prueba
+    //std::string testFolderPath = "test_images";
+
+    // Número total de imágenes de prueba
+    int numTestImages = 20;  // Cambia esto al número de imágenes de prueba que tengas
+
+    // Evaluar el conjunto de imágenes de prueba
+    //testAndEvaluate(kdTreeRoot, testFolderPath, numTestImages, desiredDimension);
+
+    // Pedir al usuario que ingrese el nombre de la imagen a comparar
+    //std::string inputImagePath;
+    //std::cout << "Ingrese el nombre de la imagen a comparar (por ejemplo, '01.png'): ";
+    //std::cin >> inputImagePath;
+    //inputImagePath = "image/02.png"; //+ inputImagePath; // Concatenar el nombre de la imagen al final de la cadena
+
+    int aciertos = 0;
+    int desaciertos = 0;
+
+    trainingFolderPath = "test_images";
+
+    for (int i = 0; i < numTestImages; ++i) {
+
+        int num_random = GenerarValorAleatorio(1, 117);
+
+        std::string imagePath = trainingFolderPath + "/images/test_" + std::to_string(num_random) + ".png";
+        std::string xmlPath = trainingFolderPath + "/annotations/test_" + std::to_string(num_random) + ".xml";
+
+        cv::Mat image = cv::imread(imagePath, cv::IMREAD_GRAYSCALE);
+        cv::Mat descriptor = generateORBDescriptor(image, desiredDimension);
+
+        // Verificar si se generó el descriptor y la etiqueta no es "unknown"
+        std::string label = getLabelFromXML(xmlPath);
+
+        if (image.empty()) {
+            std::cerr << "Error: No se pudo cargar la imagen." << std::endl;
+            return; // Salir del programa si no se pudo cargar la imagen
+        }
+
+        // Generar el descriptor SIFT para la imagen de entrada con la dimensión deseada
+        cv::Mat inputDescriptor = generateORBDescriptor(image, desiredDimension);
+
+        if (inputDescriptor.empty()) {
+            std::cerr << "Error: No se pudo generar el descriptor para la imagen." << std::endl;
+            return; // Salir del programa si no se pudo generar el descriptor
+        }
+
+        // Clasificar la imagen de entrada
+        std::string predictedLabel = kdTreeClassify(kdTreeRoot, inputDescriptor);
+
+        if (label == predictedLabel) {
+            std::cout << "Predicción correcta: " << predictedLabel << std::endl;
+            aciertos += 1;
+        }
+        else {
+            std::cout << "Predicción incorrecta: Original: " << label << " Predicción: " << predictedLabel << std::endl;
+            desaciertos += 1;
+        }
+
+    }
+
+    std::cout << "Porcentaje de aciertos: " << (aciertos * 100) / numTestImages << " Porcentaje de desaciertos: " << (desaciertos * 100) / numTestImages << std::endl;
+
+    float Precision = aciertos / (aciertos + desaciertos);
+    float Recall = 1;
+
+    std::cout << "Indicador F1 Score: (2 * precisión)/(precisión + recall) = " << (2 * Precision * Recall) / (Precision + Recall) << " || Indicador Acuracy = " << (aciertos + desaciertos) / numTestImages << std::endl;
+
+    // Cargar la imagen de entrada
+
+    // Mostrar la imagen en escala de grises
+    //cv::imshow("Imagen en Escala de Grises", inputImage);
+    //cv::waitKey(0); // Esperar hasta que se presione una tecla
+
+    // Liberar la memoria del árbol k-d
+    delete kdTreeRoot;
+}
+
+int main() {
+ 
+    experimento_02();
 
     return 0;
+
 }
